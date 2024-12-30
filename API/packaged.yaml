@@ -1,0 +1,90 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: This template is partially managed by Amazon.Lambda.Annotations (v1.6.1.0).
+Resources:
+  PhotoOrganizerApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      CorsConfiguration:
+        AllowOrigins:
+        - '*'
+        AllowMethods:
+        - POST
+        MaxAge: 600
+        AllowCredentials: false
+      DefaultRouteSettings:
+        DetailedMetricsEnabled: true
+    Metadata:
+      SamResourceId: PhotoOrganizerApi
+  UploadPhoto:
+    Type: AWS::Serverless::Function
+    Metadata:
+      SamResourceId: UploadPhoto
+      SyncedEvents:
+      - RootPost
+      Tool: Amazon.Lambda.Annotations
+    Properties:
+      FunctionName: UploadPhoto
+      Runtime: dotnet8
+      CodeUri: s3://photo.organizer/986c62db824317ced8ccfc4b1027ed72
+      MemorySize: 512
+      Timeout: 30
+      Role: arn:aws:iam::975049887576:role/FullAccess
+      PackageType: Zip
+      Handler: API::API.Functions_UploadPhotoAsync_Generated::UploadPhotoAsync
+      Events:
+        RootPost:
+          Type: HttpApi
+          Properties:
+            Path: /photos/new
+            Method: POST
+            ApiId:
+              Ref: PhotoOrganizerApi
+  SetAlbum:
+    Type: AWS::Serverless::Function
+    Metadata:
+      SamResourceId: SetAlbum
+      SyncedEvents:
+      - RootPost
+      Tool: Amazon.Lambda.Annotations
+    Properties:
+      FunctionName: SetAlbum
+      Runtime: dotnet8
+      CodeUri: s3://photo.organizer/986c62db824317ced8ccfc4b1027ed72
+      MemorySize: 512
+      Timeout: 30
+      Role: arn:aws:iam::975049887576:role/FullAccess
+      PackageType: Zip
+      Handler: API::API.Functions_SetAlbumAsync_Generated::SetAlbumAsync
+      Events:
+        RootPost:
+          Type: HttpApi
+          Properties:
+            Path: /photos/album/new
+            Method: POST
+            ApiId:
+              Ref: PhotoOrganizerApi
+  ResetAlbum:
+    Type: AWS::Serverless::Function
+    Metadata:
+      SamResourceId: ResetAlbum
+      SyncedEvents:
+      - RootPost
+      Tool: Amazon.Lambda.Annotations
+    Properties:
+      FunctionName: ResetAlbum
+      Runtime: dotnet8
+      CodeUri: s3://photo.organizer/986c62db824317ced8ccfc4b1027ed72
+      MemorySize: 512
+      Timeout: 30
+      Role: arn:aws:iam::975049887576:role/FullAccess
+      PackageType: Zip
+      Handler: API::API.Functions_ResetAlbumAsync_Generated::ResetAlbumAsync
+      Events:
+        RootPost:
+          Type: HttpApi
+          Properties:
+            Path: /photos/album/reset
+            Method: POST
+            ApiId:
+              Ref: PhotoOrganizerApi
