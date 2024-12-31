@@ -18,6 +18,7 @@
 		<PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.4.4" />
 		<PackageReference Include="Amazon.Lambda.Annotations" Version="1.6.2" />
 		<PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.404.11" />
+		<PackageReference Include="Microsoft.Identity.Client" Version="4.66.2" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 	</ItemGroup>
 	<ItemGroup>

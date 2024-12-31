@@ -1,22 +1,23 @@
 ﻿using API.Data.Repositories;
 using API.Domain;
+using API.Domain.Responses;
+using API.Files.OneDrive;
 using API.Requests;
-using API.Workflows.N8N;
 
-namespace API.Workflows;
+namespace API.Files;
 
-public sealed class WorkflowsService
+public sealed class FileService
 {
-    private readonly N8NClient _n8nClient;
     private readonly AlbumsRepository _albumsRepository;
+    private readonly OneDriveClient _oneDriveClient;
 
-    public WorkflowsService(N8NClient n8NClient, AlbumsRepository albumsRepository)
+    public FileService(AlbumsRepository albumsRepository, OneDriveClient oneDriveClient)
     {
-        _n8nClient = n8NClient;
         _albumsRepository = albumsRepository;
+        _oneDriveClient = oneDriveClient;
     }
 
-    public async Task UploadPhotoAsync(UploadPhotoRequest request)
+    public async Task<Result<string>> UploadPhotoAsync(UploadPhotoRequest request)
     {
         var album = await _albumsRepository.GetActiveAlbumAsync();
 
@@ -25,7 +26,7 @@ public sealed class WorkflowsService
             request.File,
             album.Path);
 
-        await _n8nClient.UploadPhotoAsync(photoObject);
+        return await _oneDriveClient.UploadPhotoAsync(photoObject);
     }
 
     public async Task SetAlbumAsync(string name)
@@ -35,7 +36,7 @@ public sealed class WorkflowsService
         if (album is not null)
         {
             var activeAlbum = await _albumsRepository.GetActiveAlbumAsync();
-            
+
             activeAlbum.Deactivate();
             album.Activate();
 

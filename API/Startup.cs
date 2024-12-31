@@ -1,9 +1,10 @@
 using API.Data;
 using API.Data.Repositories;
-using API.Workflows;
-using API.Workflows.N8N;
+using API.Files;
+using API.Files.OneDrive;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace API;
 
@@ -18,16 +19,15 @@ public class Startup
 
         services.AddSingleton<IConfiguration>(configuration);
 
-        services.AddHttpClient<N8NClient>(
+        services.AddHttpClient<OneDriveClient>(
             (_, client) =>
             {
-                client.DefaultRequestHeaders.Add("API_KEY", $"{configuration["n8n:key"]}");
-
-                client.BaseAddress = new Uri("https://dbrdak.app.n8n.cloud/webhook/photos");
+                client.BaseAddress = new Uri("https://graph.microsoft.com");
             });
 
-        services.AddScoped<WorkflowsService>();
+        services.AddScoped<FileService>();
         services.AddScoped<DataContext>();
         services.AddScoped<AlbumsRepository>();
+        services.ConfigureOptions<OneDriveSettingsSetup>();
     }
 }

@@ -26,7 +26,7 @@ Resources:
     Properties:
       FunctionName: UploadPhoto
       Runtime: dotnet8
-      CodeUri: s3://photo.organizer/986c62db824317ced8ccfc4b1027ed72
+      CodeUri: s3://photo.organizer/5c1ed8dfc1dce0a2ec395696d5f5c815
       MemorySize: 512
       Timeout: 30
       Role: arn:aws:iam::975049887576:role/FullAccess
@@ -50,7 +50,7 @@ Resources:
     Properties:
       FunctionName: SetAlbum
       Runtime: dotnet8
-      CodeUri: s3://photo.organizer/986c62db824317ced8ccfc4b1027ed72
+      CodeUri: s3://photo.organizer/5c1ed8dfc1dce0a2ec395696d5f5c815
       MemorySize: 512
       Timeout: 30
       Role: arn:aws:iam::975049887576:role/FullAccess
@@ -74,7 +74,7 @@ Resources:
     Properties:
       FunctionName: ResetAlbum
       Runtime: dotnet8
-      CodeUri: s3://photo.organizer/986c62db824317ced8ccfc4b1027ed72
+      CodeUri: s3://photo.organizer/5c1ed8dfc1dce0a2ec395696d5f5c815
       MemorySize: 512
       Timeout: 30
       Role: arn:aws:iam::975049887576:role/FullAccess

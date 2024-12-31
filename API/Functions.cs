@@ -5,8 +5,8 @@ using Amazon.Lambda.Annotations;
 using Amazon.Lambda.Annotations.APIGateway;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
+using API.Files;
 using API.Requests;
-using API.Workflows;
 using Newtonsoft.Json;
 
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
@@ -15,11 +15,11 @@ namespace API;
 
 public class Functions
 {
-    private readonly WorkflowsService _workflowsService;
+    private readonly FileService _fileService;
 
-    public Functions(WorkflowsService workflowsService)
+    public Functions(FileService fileService)
     {
-        _workflowsService = workflowsService;
+        _fileService = fileService;
     }
 
     [LambdaFunction]
@@ -37,7 +37,25 @@ public class Functions
 
         try
         {
-            await _workflowsService.UploadPhotoAsync(request);
+            var result = await _fileService.UploadPhotoAsync(request);
+
+            switch (result.IsSuccess)
+            {
+                case true:
+                    context.Logger.LogLine($"Successfully uploaded {request.Name}");
+                    return new APIGatewayHttpApiV2ProxyResponse
+                    {
+                        StatusCode = 200,
+                        Body = $"Successfully uploaded {request.Name}"
+                    };
+                case false:
+                    context.Logger.LogLine($"Failed to upload {request.Name}, error: {result.Error}");
+                    return new APIGatewayHttpApiV2ProxyResponse
+                    {
+                        StatusCode = 500,
+                        Body = $"Failed to upload {request.Name}"
+                    };
+            }
         }
         catch (Exception e)
         {
@@ -49,11 +67,6 @@ public class Functions
                 Body = $"Failed to upload {request.Name}"
             };
         }
-
-        return new APIGatewayHttpApiV2ProxyResponse
-        {
-            StatusCode = 200
-        };
     }
 
     [LambdaFunction]
