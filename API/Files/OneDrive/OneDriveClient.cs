@@ -1,11 +1,9 @@
-﻿using API.Domain;
-using Microsoft.Identity.Client;
-using System.Text.Json;
-using System.Text;
-using System.Text.Json.Serialization;
+﻿using Amazon.Lambda.Core;
+using API.Auth;
+using API.Domain;
 using API.Domain.Responses;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Options;
+using Microsoft.Graph;
+using Microsoft.Graph.Models;
 using Newtonsoft.Json;
 
 namespace API.Files.OneDrive;
@@ -13,130 +11,79 @@ namespace API.Files.OneDrive;
 public sealed class OneDriveClient
 {
     private readonly HttpClient _client;
-    private readonly IConfidentialClientApplication _msalClient;
-    private readonly OneDriveSettings _settings;
+    private readonly GraphServiceClient _graphClient;
 
-    public OneDriveClient(
-        HttpClient client,
-        IOptions<OneDriveSettings> options)
+    public OneDriveClient(HttpClient client, MicrosoftTokenCredential tokenCredential)
     {
         _client = client;
-        _settings = options.Value;
-
-        _msalClient = ConfidentialClientApplicationBuilder
-            .Create(options.Value.ClientId)
-            .WithClientSecret(options.Value.ClientSecret)
-            .WithAuthority("https://login.microsoftonline.com/consumers/")
-            .Build();
+        _graphClient = new GraphServiceClient(tokenCredential);
     }
 
-    private async Task<Result<string>> GetAccessTokenAsync()
+    public async Task<Result> UploadPhotoAsync(PhotoObject photo)
     {
         try
         {
-            var scopes = new[] { "https://graph.microsoft.com/.default" };
-            var result = await _msalClient.AcquireTokenForClient(scopes).ExecuteAsync();
-            return Result.Success(result.AccessToken);
-        }
-        catch (MsalException ex)
-        {
-            return Result.Failure<string>($"Authentication failed: {ex.Message}");
-        }
-    }
+            var fileBytes = Convert.FromBase64String(photo.Base64Image);
+            var stream = new MemoryStream(fileBytes);
 
-    public async Task<Result<string>> UploadPhotoAsync(PhotoObject photo)
-    {
-        var tokenResult = await GetAccessTokenAsync();
-        if (tokenResult.IsFailure)
-        {
-            return tokenResult;
-        }
+            // TODO Fix
+            var uploadSession = await _graphClient
+                .Drives[""]
+                .Items[photo.FolderId]
+                .ItemWithPath(photo.FileName)
+                .Content
+                .PutAsync(stream);
 
-        _client.DefaultRequestHeaders.Authorization =
-            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", tokenResult.Value);
+            await stream.DisposeAsync();
 
-        try
-        {
-            byte[] fileBytes = Convert.FromBase64String(photo.Base64Image);
-            var sessionResult = await CreateUploadSessionAsync(photo);
+            LambdaLogger.Log($"Upload session URL: {JsonConvert.SerializeObject(uploadSession)}");
 
-            if (sessionResult.IsFailure)
-            {
-                return Result.Failure<string>(sessionResult.Error);
-            }
-
-            var uploadResult = await UploadFileInChunksAsync(sessionResult.Value.UploadUrl, fileBytes);
-            if (uploadResult.IsFailure)
-            {
-                return Result.Failure<string>(uploadResult.Error);
-            }
-
-            return Result.Success($"https://onedrive.live.com/redir?resid={sessionResult.Value.ResourceId}");
+            return Result.Success();
         }
         catch (FormatException)
         {
-            return Result.Failure<string>("Invalid base64 string provided");
+            return Result.Failure("Invalid base64 string provided");
         }
         catch (Exception ex)
         {
-            return Result.Failure<string>($"Unexpected error during upload: {ex.Message}");
+            return Result.Failure($"Unexpected error during upload: {ex.Message}");
         }
     }
 
-    private async Task<Result<OneDriveUploadSession>> CreateUploadSessionAsync(PhotoObject photo)
+    private async Task<Result<string>> UploadFileAsync(PhotoObject photo, byte[] fileBytes)
     {
-        var requestBody = new OneDriveUploadRequest();
-        var createSessionContent = new StringContent(
-            JsonConvert.SerializeObject(requestBody),
-            Encoding.UTF8,
-            "application/json"
-        );
-
-        var sessionResponse = await _client.PostAsync(
-            $"/v1.0/users/{_settings.UserId}//drive/root:{photo.Path}/{photo.FileName}:/createUploadSession",
-            createSessionContent
-        );
-
-        if (!sessionResponse.IsSuccessStatusCode)
+        try
         {
-            return Result.Failure<OneDriveUploadSession>(
-                $"Failed to create upload session: {await sessionResponse.Content.ReadAsStringAsync()}");
-        }
 
-        var sessionInfo = JsonConvert.DeserializeObject<OneDriveUploadSession>(
-            await sessionResponse.Content.ReadAsStringAsync()
-        );
+            var contentType = "text/plain";
 
-        return Result.Success(sessionInfo);
-    }
+            var requestUrl = 
+                $"/v1.0/me/drive/items/{photo.FolderId}:/{photo.FileName}:/content?@microsoft.graph.conflictBehavior=replace";
 
-    private async Task<Result> UploadFileInChunksAsync(string uploadUrl, byte[] fileBytes)
-    {
-        const int chunkSize = 320 * 1024; // 320 KB chunks
-        var totalLength = fileBytes.Length;
-
-        for (var i = 0; i < totalLength; i += chunkSize)
-        {
-            var chunkLength = Math.Min(chunkSize, totalLength - i);
-            var chunk = new byte[chunkLength];
-            Array.Copy(fileBytes, i, chunk, 0, chunkLength);
-
-            using var request = new HttpRequestMessage(HttpMethod.Put, uploadUrl);
-            request.Content = new ByteArrayContent(chunk);
-            request.Content.Headers.ContentLength = chunkLength;
-            request.Content.Headers.ContentRange = new System.Net.Http.Headers.ContentRangeHeaderValue(
-                i,
-                i + chunkLength - 1,
-                totalLength
-            );
+            using var request = new HttpRequestMessage(HttpMethod.Put, requestUrl);
+            using var content = new StreamContent(new MemoryStream(fileBytes));
+            content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
+            request.Content = new StringContent(photo.Base64Image);
 
             var response = await _client.SendAsync(request);
+            var responseContent = await response.Content.ReadAsStringAsync();
+
+            LambdaLogger.Log($"Upload request URL: {requestUrl}");
+            LambdaLogger.Log($"Upload response status: {response.StatusCode}");
+            LambdaLogger.Log($"Upload response content: {responseContent}");
+
             if (!response.IsSuccessStatusCode)
             {
-                return Result.Failure($"Failed to upload chunk: {await response.Content.ReadAsStringAsync()}");
+                return Result.Failure<string>(
+                    $"[{response.StatusCode}] Failed to upload file: {responseContent}");
             }
-        }
 
-        return Result.Success();
+            return Result.Success(responseContent);
+        }
+        catch (Exception ex)
+        {
+            LambdaLogger.Log($"Error during file upload: {ex}");
+            return Result.Failure<string>($"Error during file upload: {ex.Message}");
+        }
     }
 }

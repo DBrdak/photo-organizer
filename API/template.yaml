@@ -14,6 +14,72 @@ Resources:
         AllowCredentials: false
       DefaultRouteSettings:
         DetailedMetricsEnabled: true
+  MicrosoftLogin:
+    Type: AWS::Serverless::Function
+    Metadata:
+      Tool: Amazon.Lambda.Annotations
+      SyncedEvents:
+        - RootGet
+    Properties:
+      FunctionName: MicrosoftLogin
+      Runtime: dotnet8
+      CodeUri: .
+      MemorySize: 512
+      Timeout: 30
+      Role: arn:aws:iam::975049887576:role/Admin
+      PackageType: Zip
+      Handler: API::API.Functions_MicrosoftLogin_Generated::MicrosoftLogin
+      Events:
+        RootGet:
+          Type: HttpApi
+          Properties:
+            Path: /microsoft/login
+            Method: GET
+            ApiId: !Ref PhotoOrganizerApi
+  MicrosoftCallback:
+    Type: AWS::Serverless::Function
+    Metadata:
+      Tool: Amazon.Lambda.Annotations
+      SyncedEvents:
+        - RootGet
+    Properties:
+      FunctionName: MicrosoftCallback
+      Runtime: dotnet8
+      CodeUri: .
+      MemorySize: 512
+      Timeout: 30
+      Role: arn:aws:iam::975049887576:role/Admin
+      PackageType: Zip
+      Handler: API::API.Functions_MicrosoftCallback_Generated::MicrosoftCallback
+      Events:
+        RootGet:
+          Type: HttpApi
+          Properties:
+              Path: /microsoft/callback
+              Method: GET
+              ApiId: !Ref PhotoOrganizerApi
+  MicrosoftRefreshTokens:
+    Type: AWS::Serverless::Function
+    Metadata:
+      Tool: Amazon.Lambda.Annotations
+      SyncedEvents:
+        - RootPut
+    Properties:
+      FunctionName: MicrosoftRefreshTokens
+      Runtime: dotnet8
+      CodeUri: .
+      MemorySize: 512
+      Timeout: 30
+      Role: arn:aws:iam::975049887576:role/Admin
+      PackageType: Zip
+      Handler: API::API.Functions_MicrosoftRefreshTokens_Generated::MicrosoftRefreshTokens
+      Events:
+        RootPut:
+          Type: HttpApi
+          Properties:
+              Path: /microsoft/tokens/refresh
+              Method: PUT
+              ApiId: !Ref PhotoOrganizerApi
   UploadPhoto:
     Type: AWS::Serverless::Function
     Metadata:
@@ -26,7 +92,7 @@ Resources:
       CodeUri: .
       MemorySize: 512
       Timeout: 30
-      Role: arn:aws:iam::975049887576:role/FullAccess
+      Role: arn:aws:iam::975049887576:role/Admin
       PackageType: Zip
       Handler: API::API.Functions_UploadPhotoAsync_Generated::UploadPhotoAsync
       Events:
@@ -48,7 +114,7 @@ Resources:
       CodeUri: .
       MemorySize: 512
       Timeout: 30
-      Role: arn:aws:iam::975049887576:role/FullAccess
+      Role: arn:aws:iam::975049887576:role/Admin
       PackageType: Zip
       Handler: API::API.Functions_SetAlbumAsync_Generated::SetAlbumAsync
       Events:
@@ -70,7 +136,7 @@ Resources:
       CodeUri: .
       MemorySize: 512
       Timeout: 30
-      Role: arn:aws:iam::975049887576:role/FullAccess
+      Role: arn:aws:iam::975049887576:role/Admin
       PackageType: Zip
       Handler: API::API.Functions_ResetAlbumAsync_Generated::ResetAlbumAsync
       Events:

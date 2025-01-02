@@ -1,5 +1,4 @@
-﻿using System.Security.Principal;
-using Amazon.DynamoDBv2;
+﻿using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
 
 namespace API.Data;

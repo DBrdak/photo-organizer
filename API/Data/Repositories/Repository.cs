@@ -14,7 +14,7 @@ public abstract class Repository<TEntity>
         Table = context.Set<TEntity>();
     }
 
-    public virtual async Task<IEnumerable<TEntity>> GetAllAsync(CancellationToken cancellationToken)
+    public virtual async Task<IEnumerable<TEntity>> GetAllAsync()
     {
         var config = new ScanOperationConfig
         {
@@ -27,7 +27,7 @@ public abstract class Repository<TEntity>
         var docs = new List<Document>();
 
         do 
-            docs.AddRange(await scanner.GetNextSetAsync(cancellationToken));
+            docs.AddRange(await scanner.GetNextSetAsync());
         while (!scanner.IsDone);
 
         return docs.Select(

@@ -17,14 +17,14 @@ public sealed class FileService
         _oneDriveClient = oneDriveClient;
     }
 
-    public async Task<Result<string>> UploadPhotoAsync(UploadPhotoRequest request)
+    public async Task<Result> UploadPhotoAsync(UploadPhotoRequest request)
     {
         var album = await _albumsRepository.GetActiveAlbumAsync();
 
         var photoObject = new PhotoObject(
             $"{request.Name}.{request.Extension}",
             request.File,
-            album.Path);
+            album.Id);
 
         return await _oneDriveClient.UploadPhotoAsync(photoObject);
     }
