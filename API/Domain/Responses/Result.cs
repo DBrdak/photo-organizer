@@ -30,7 +30,7 @@ public class Result
     public static Result<TValue> Failure<TValue>(string error) => new(default, false, error);
 
     public static Result<TValue> Create<TValue>(TValue? value) =>
-        value is not null ? Success(value) : Failure<TValue>("Value cannot be null");
+        value is not null ? Success(value) : Failure<TValue>("Values cannot be null");
 
     public static Result<TValue> Create<TValue>(TValue? value, string error) =>
         value is not null ? Success(value) : Failure<TValue>(error);

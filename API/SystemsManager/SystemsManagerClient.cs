@@ -24,4 +24,10 @@ public sealed class SystemsManagerClient
             Type = ParameterType.String,
             Overwrite = true
         });
+
+    public async Task SetMicrosoftAccessTokenAsync(string accessToken, long expiresOn)
+    {
+        await SetParameterAsync("/photo-organizer/microsoft/access-token/value", accessToken);
+        await SetParameterAsync("/photo-organizer/microsoft/access-token/expires-on", expiresOn.ToString());
+    }
 }

@@ -3,9 +3,9 @@ using Amazon.Lambda.Annotations.APIGateway;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
 using API.Auth;
+using API.Data.Repositories;
 using API.Files;
 using API.Requests;
-using API.Workflows;
 using Newtonsoft.Json;
 
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
@@ -15,17 +15,17 @@ namespace API;
 public class Functions
 {
     private readonly FileService _fileService;
-    private readonly WorkflowsService _workflowsService;
     private readonly MicrosoftAuthenticationService _msAuthService;
+    private readonly AlbumsRepository _albumsRepository;
 
     public Functions(
         FileService fileService,
-        WorkflowsService workflowsService,
-        MicrosoftAuthenticationService msAuthService)
+        MicrosoftAuthenticationService msAuthService,
+        AlbumsRepository albumsRepository)
     {
         _fileService = fileService;
-        _workflowsService = workflowsService;
         _msAuthService = msAuthService;
+        _albumsRepository = albumsRepository;
     }
 
     [LambdaFunction]
@@ -85,17 +85,15 @@ public class Functions
         [FromQuery] string name,
         [FromQuery] string extension,
         [FromBody] string data,
+        [FromQuery] string user,
         APIGatewayHttpApiV2ProxyRequest apiRequest,
         ILambdaContext context)
     {
-        var file = apiRequest.Body;
-
-        var request = new UploadPhotoRequest(name, extension, data);
+        var request = new UploadPhotoRequest(name, extension, data, user);
 
         try
         {
             var result = await _fileService.UploadPhotoAsync(request);
-            //var result = await _workflowsService.UploadPhotoAsync(request);
 
             switch (result.IsSuccess)
             {
@@ -104,62 +102,93 @@ public class Functions
                     return new APIGatewayHttpApiV2ProxyResponse
                     {
                         StatusCode = 200,
-                        Body = $"Successfully uploaded {request.Name}"
+                        Body = $"Successfully uploaded {request.Name}",
+                        Headers = new Dictionary<string, string> { { "Content-Type", "text/plain" } }
                     };
                 case false:
                     context.Logger.LogError(result.Error);
                     return new APIGatewayHttpApiV2ProxyResponse
                     {
                         StatusCode = 400,
-                        Body = $"Failed to upload {request.Name}"
+                        Body = $"Failed to upload {request.Name}",
+                        Headers = new Dictionary<string, string> { { "Content-Type", "text/plain" } }
                     };
             }
         }
         catch (Exception e)
         {
-            context.Logger.LogLine($"An error occured when tried to upload a photo: {e.Message}");
+            context.Logger.LogLine($"An error occured when tried to upload a photo: {JsonConvert.SerializeObject(e)}");
 
             return new APIGatewayHttpApiV2ProxyResponse
             {
                 StatusCode = 500,
-                Body = $"Failed to upload {request.Name}"
+                Body = $"Failed to upload {request.Name}",
+                Headers = new Dictionary<string, string> { { "Content-Type", "text/plain" } }
             };
         }
     }
 
     [LambdaFunction]
-    [HttpApi(LambdaHttpMethod.Post, $"photos/album/new")]
-    public async Task<APIGatewayHttpApiV2ProxyResponse> SetAlbumAsync(APIGatewayHttpApiV2ProxyRequest request, ILambdaContext context)
-    {
-        var photo = JsonConvert.SerializeObject(request);
-
-        context.Logger.LogLine($"Setting album: {photo}");
-
-        //await _workflowsService.SetAlbumAsync();
-
-        return new APIGatewayHttpApiV2ProxyResponse
+    [HttpApi(LambdaHttpMethod.Get, $"photos/album")]
+    public async Task<APIGatewayHttpApiV2ProxyResponse> GetAlbumAsync(APIGatewayHttpApiV2ProxyRequest request, ILambdaContext context) =>
+        new()
         {
             StatusCode = 200,
-            Body = "Album set successfully",
+            Body = (await _albumsRepository.GetActiveAlbumAsync()).Name,
             Headers = new Dictionary<string, string> { { "Content-Type", "text/plain" } }
         };
+
+    [LambdaFunction]
+    [HttpApi(LambdaHttpMethod.Post, $"photos/album/new")]
+    public async Task<APIGatewayHttpApiV2ProxyResponse> SetAlbumAsync([FromQuery]string name, ILambdaContext context)
+    {
+        try
+        {
+            await _fileService.SetActiveAlbumAsync(name);
+
+            return new APIGatewayHttpApiV2ProxyResponse
+            {
+                StatusCode = 200,
+                Body = $"Active album has been set to {name}",
+                Headers = new Dictionary<string, string> { { "Content-Type", "text/plain" } }
+            };
+        }
+        catch (Exception e)
+        {
+            LambdaLogger.Log($"Failed to set album, error: {JsonConvert.SerializeObject(e)}");
+            return new APIGatewayHttpApiV2ProxyResponse
+            {
+                StatusCode = 500,
+                Body = $"Failed to set album",
+                Headers = new Dictionary<string, string> { { "Content-Type", "text/plain" } }
+            };
+        }
     }
 
     [LambdaFunction]
     [HttpApi(LambdaHttpMethod.Post, $"photos/album/reset")]
     public async Task<APIGatewayHttpApiV2ProxyResponse> ResetAlbumAsync(APIGatewayHttpApiV2ProxyRequest request, ILambdaContext context)
     {
-        var photo = JsonConvert.SerializeObject(request);
-
-        context.Logger.LogLine($"Resetting album: {photo}");
-
-        //await _workflowsService.ResetAlbumAsync();
-
-        return new APIGatewayHttpApiV2ProxyResponse
+        try
         {
-            StatusCode = 200,
-            Body = "Album reset successfully",
-            Headers = new Dictionary<string, string> { { "Content-Type", "text/plain" } }
-        };
+            await _fileService.ResetAlbumAsync();
+
+            return new APIGatewayHttpApiV2ProxyResponse
+            {
+                StatusCode = 200,
+                Body = "Album reset successfully",
+                Headers = new Dictionary<string, string> { { "Content-Type", "text/plain" } }
+            };
+        }
+        catch (Exception e)
+        {
+            LambdaLogger.Log($"Failed to reset album, error: {JsonConvert.SerializeObject(e)}");
+            return new APIGatewayHttpApiV2ProxyResponse
+            {
+                StatusCode = 500,
+                Body = $"Failed to reset album",
+                Headers = new Dictionary<string, string> { { "Content-Type", "text/plain" } }
+            };
+        }
     }
 }

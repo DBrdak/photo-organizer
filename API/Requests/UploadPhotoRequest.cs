@@ -1,3 +1,3 @@
 namespace API.Requests;
 
-public sealed record UploadPhotoRequest(string Name, string Extension, string File);
+public sealed record UploadPhotoRequest(string Name, string Extension, string File, string User);

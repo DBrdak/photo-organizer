@@ -21,7 +21,7 @@ architecture = "x86_64"
 handler = "API::API.Functions_MicrosoftLogin_Generated::MicrosoftLogin"
 manifest_hash = ""
 packagetype = "Zip"
-functions = ["MicrosoftLogin", "MicrosoftCallback"]
+functions = ["MicrosoftLogin", "MicrosoftCallback", "GetAlbum"]
 
 [function_build_definitions.0c0251c1-a2df-419a-91af-bad9fbc2060e.metadata]
 Tool = "Amazon.Lambda.Annotations"

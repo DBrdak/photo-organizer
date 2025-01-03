@@ -26,7 +26,7 @@ Resources:
     Properties:
       FunctionName: MicrosoftLogin
       Runtime: dotnet8
-      CodeUri: s3://photo.organizer/927c90d9ff19c6cc9026edbe40fb83cd
+      CodeUri: s3://photo.organizer/855665dcd4d9fe60cc198ca3a38af4d6
       MemorySize: 512
       Timeout: 30
       Role: arn:aws:iam::975049887576:role/Admin
@@ -50,7 +50,7 @@ Resources:
     Properties:
       FunctionName: MicrosoftCallback
       Runtime: dotnet8
-      CodeUri: s3://photo.organizer/927c90d9ff19c6cc9026edbe40fb83cd
+      CodeUri: s3://photo.organizer/855665dcd4d9fe60cc198ca3a38af4d6
       MemorySize: 512
       Timeout: 30
       Role: arn:aws:iam::975049887576:role/Admin
@@ -74,7 +74,7 @@ Resources:
     Properties:
       FunctionName: MicrosoftRefreshTokens
       Runtime: dotnet8
-      CodeUri: s3://photo.organizer/927c90d9ff19c6cc9026edbe40fb83cd
+      CodeUri: s3://photo.organizer/855665dcd4d9fe60cc198ca3a38af4d6
       MemorySize: 512
       Timeout: 30
       Role: arn:aws:iam::975049887576:role/Admin
@@ -98,7 +98,7 @@ Resources:
     Properties:
       FunctionName: UploadPhoto
       Runtime: dotnet8
-      CodeUri: s3://photo.organizer/927c90d9ff19c6cc9026edbe40fb83cd
+      CodeUri: s3://photo.organizer/855665dcd4d9fe60cc198ca3a38af4d6
       MemorySize: 512
       Timeout: 30
       Role: arn:aws:iam::975049887576:role/Admin
@@ -112,6 +112,30 @@ Resources:
             Method: POST
             ApiId:
               Ref: PhotoOrganizerApi
+  GetAlbum:
+    Type: AWS::Serverless::Function
+    Metadata:
+      SamResourceId: GetAlbum
+      SyncedEvents:
+      - RootGet
+      Tool: Amazon.Lambda.Annotations
+    Properties:
+      FunctionName: GetAlbum
+      Runtime: dotnet8
+      CodeUri: s3://photo.organizer/855665dcd4d9fe60cc198ca3a38af4d6
+      MemorySize: 512
+      Timeout: 30
+      Role: arn:aws:iam::975049887576:role/Admin
+      PackageType: Zip
+      Handler: API::API.Functions_GetAlbumAsync_Generated::GetAlbumAsync
+      Events:
+        RootPost:
+          Type: HttpApi
+          Properties:
+            Path: /photos/album
+            Method: GET
+            ApiId:
+              Ref: PhotoOrganizerApi
   SetAlbum:
     Type: AWS::Serverless::Function
     Metadata:
@@ -122,7 +146,7 @@ Resources:
     Properties:
       FunctionName: SetAlbum
       Runtime: dotnet8
-      CodeUri: s3://photo.organizer/927c90d9ff19c6cc9026edbe40fb83cd
+      CodeUri: s3://photo.organizer/855665dcd4d9fe60cc198ca3a38af4d6
       MemorySize: 512
       Timeout: 30
       Role: arn:aws:iam::975049887576:role/Admin
@@ -146,7 +170,7 @@ Resources:
     Properties:
       FunctionName: ResetAlbum
       Runtime: dotnet8
-      CodeUri: s3://photo.organizer/927c90d9ff19c6cc9026edbe40fb83cd
+      CodeUri: s3://photo.organizer/855665dcd4d9fe60cc198ca3a38af4d6
       MemorySize: 512
       Timeout: 30
       Role: arn:aws:iam::975049887576:role/Admin

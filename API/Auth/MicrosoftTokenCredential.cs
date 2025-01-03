@@ -1,8 +1,8 @@
-﻿using Azure.Core;
+﻿using System.Net.Http.Headers;
 
 namespace API.Auth;
 
-public sealed class MicrosoftTokenCredential : TokenCredential
+public sealed class MicrosoftTokenCredential
 {
     private readonly MicrosoftAuthenticationService _authService;
 
@@ -11,7 +11,7 @@ public sealed class MicrosoftTokenCredential : TokenCredential
         _authService = authService;
     }
 
-    public override async ValueTask<AccessToken> GetTokenAsync(TokenRequestContext requestContext, CancellationToken cancellationToken)
+    public async Task AddTokenToHeadersAsync(HttpClient client)
     {
         var tokenResult = await _authService.GenerateNewAccessTokenAsync();
 
@@ -20,18 +20,8 @@ public sealed class MicrosoftTokenCredential : TokenCredential
             throw new Exception(tokenResult.Error);
         }
 
-        return new AccessToken(tokenResult.Value.Token, tokenResult.Value.ExpiresOn);
-    }
-
-    public override AccessToken GetToken(TokenRequestContext requestContext, CancellationToken cancellationToken)
-    {
-        var tokenResult = _authService.GenerateNewAccessTokenAsync().Result;
-
-        if (tokenResult.IsFailure)
-        {
-            throw new Exception(tokenResult.Error);
-        }
-
-        return new AccessToken(tokenResult.Value.Token, tokenResult.Value.ExpiresOn);
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+            "Bearer",
+            tokenResult.Value.Token);
     }
 }

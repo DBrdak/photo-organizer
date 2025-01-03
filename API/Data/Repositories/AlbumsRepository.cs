@@ -1,5 +1,5 @@
 ﻿using Amazon.DynamoDBv2.DocumentModel;
-using API.Domain;
+using API.Domain.Albums;
 
 namespace API.Data.Repositories;
 

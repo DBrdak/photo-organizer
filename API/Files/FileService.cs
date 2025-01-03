@@ -1,8 +1,10 @@
 ﻿using API.Data.Repositories;
 using API.Domain;
+using API.Domain.Albums;
 using API.Domain.Responses;
 using API.Files.OneDrive;
 using API.Requests;
+using Microsoft.Identity.Client;
 
 namespace API.Files;
 
@@ -22,30 +24,22 @@ public sealed class FileService
         var album = await _albumsRepository.GetActiveAlbumAsync();
 
         var photoObject = new PhotoObject(
-            $"{request.Name}.{request.Extension}",
+            $"{request.Name}{request.User.ToUpper()}.{request.Extension}",
             request.File,
-            album.Id);
+            album.FilePath);
 
         return await _oneDriveClient.UploadPhotoAsync(photoObject);
     }
 
-    public async Task SetAlbumAsync(string name)
+    public async Task SetActiveAlbumAsync(string name)
     {
-        var album = await _albumsRepository.GetByNameAsync(name);
+        var album = await _albumsRepository.GetByNameAsync(name) ?? new Album(name, false);
+        var activeAlbum = await _albumsRepository.GetActiveAlbumAsync();
 
-        if (album is not null)
-        {
-            var activeAlbum = await _albumsRepository.GetActiveAlbumAsync();
-
-            activeAlbum.Deactivate();
-            album.Activate();
-
-            await _albumsRepository.UpdateAlbumAsync(album);
-            await _albumsRepository.UpdateAlbumAsync(activeAlbum);
-            return;
-        }
-
-        // Create album via n8n then Fetch ID and create album
+        activeAlbum.Deactivate();
+        album.Activate();
+        await _albumsRepository.UpdateAlbumAsync(activeAlbum);
+        await _albumsRepository.UpdateAlbumAsync(album);
     }
 
     public async Task ResetAlbumAsync()

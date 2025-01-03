@@ -102,6 +102,28 @@ Resources:
             Path: /photos/new
             Method: POST
             ApiId: !Ref PhotoOrganizerApi
+  GetAlbum:
+    Type: AWS::Serverless::Function
+    Metadata:
+      Tool: Amazon.Lambda.Annotations
+      SyncedEvents:
+        - RootGet
+    Properties:
+      FunctionName: GetAlbum
+      Runtime: dotnet8
+      CodeUri: .
+      MemorySize: 512
+      Timeout: 30
+      Role: arn:aws:iam::975049887576:role/Admin
+      PackageType: Zip
+      Handler: API::API.Functions_GetAlbumAsync_Generated::GetAlbumAsync
+      Events:
+        RootPost:
+          Type: HttpApi
+          Properties:
+            Path: /photos/album
+            Method: GET
+            ApiId: !Ref PhotoOrganizerApi
   SetAlbum:
     Type: AWS::Serverless::Function
     Metadata:

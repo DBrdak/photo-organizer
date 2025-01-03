@@ -1,9 +1,8 @@
-﻿using Amazon.Lambda.Core;
+﻿using System.Web;
+using Amazon.Lambda.Core;
 using API.Auth;
 using API.Domain;
 using API.Domain.Responses;
-using Microsoft.Graph;
-using Microsoft.Graph.Models;
 using Newtonsoft.Json;
 
 namespace API.Files.OneDrive;
@@ -11,34 +10,21 @@ namespace API.Files.OneDrive;
 public sealed class OneDriveClient
 {
     private readonly HttpClient _client;
-    private readonly GraphServiceClient _graphClient;
+    private readonly MicrosoftTokenCredential _tokenCredential;
 
     public OneDriveClient(HttpClient client, MicrosoftTokenCredential tokenCredential)
     {
         _client = client;
-        _graphClient = new GraphServiceClient(tokenCredential);
+        _tokenCredential = tokenCredential;
     }
 
     public async Task<Result> UploadPhotoAsync(PhotoObject photo)
     {
         try
         {
-            var fileBytes = Convert.FromBase64String(photo.Base64Image);
-            var stream = new MemoryStream(fileBytes);
+            await _tokenCredential.AddTokenToHeadersAsync(_client);
 
-            // TODO Fix
-            var uploadSession = await _graphClient
-                .Drives[""]
-                .Items[photo.FolderId]
-                .ItemWithPath(photo.FileName)
-                .Content
-                .PutAsync(stream);
-
-            await stream.DisposeAsync();
-
-            LambdaLogger.Log($"Upload session URL: {JsonConvert.SerializeObject(uploadSession)}");
-
-            return Result.Success();
+            return await UploadFileAsync(photo);
         }
         catch (FormatException)
         {
@@ -50,27 +36,19 @@ public sealed class OneDriveClient
         }
     }
 
-    private async Task<Result<string>> UploadFileAsync(PhotoObject photo, byte[] fileBytes)
+    private async Task<Result<string>> UploadFileAsync(PhotoObject photo)
     {
         try
         {
+            var file = new MemoryStream(Convert.FromBase64String(photo.Base64Image));
+            var requestUrl = $"me/drive/root:/{photo.Path}/{photo.FileName}:/content";
+            requestUrl = HttpUtility.UrlEncode(requestUrl);
 
-            var contentType = "text/plain";
+            var response = await _client.PutAsync(requestUrl, new StreamContent(file));
 
-            var requestUrl = 
-                $"/v1.0/me/drive/items/{photo.FolderId}:/{photo.FileName}:/content?@microsoft.graph.conflictBehavior=replace";
+            LambdaLogger.Log($"Response: {JsonConvert.SerializeObject(response.RequestMessage)}");
 
-            using var request = new HttpRequestMessage(HttpMethod.Put, requestUrl);
-            using var content = new StreamContent(new MemoryStream(fileBytes));
-            content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType);
-            request.Content = new StringContent(photo.Base64Image);
-
-            var response = await _client.SendAsync(request);
             var responseContent = await response.Content.ReadAsStringAsync();
-
-            LambdaLogger.Log($"Upload request URL: {requestUrl}");
-            LambdaLogger.Log($"Upload response status: {response.StatusCode}");
-            LambdaLogger.Log($"Upload response content: {responseContent}");
 
             if (!response.IsSuccessStatusCode)
             {

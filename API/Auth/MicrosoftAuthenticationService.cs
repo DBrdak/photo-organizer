@@ -2,19 +2,19 @@
 using API.SystemsManager;
 using Newtonsoft.Json;
 using System.Web;
-using API.Files.OneDrive;
-using Azure.Core;
+using API.Auth.Models;
 using Microsoft.Extensions.Options;
+using API.Auth.Options;
 
 namespace API.Auth;
 
 public sealed class MicrosoftAuthenticationService
 {
     private readonly HttpClient _httpClient;
-    private readonly OneDriveSettings _settings;
+    private readonly MicrosoftSettings _settings;
     private readonly SystemsManagerClient _ssm;
 
-    public MicrosoftAuthenticationService(IOptions<OneDriveSettings> settings, SystemsManagerClient ssm)
+    public MicrosoftAuthenticationService(IOptions<MicrosoftSettings> settings, SystemsManagerClient ssm)
     {
         _ssm = ssm;
         _settings = settings.Value;
@@ -39,8 +39,6 @@ public sealed class MicrosoftAuthenticationService
     {
         try
         {
-            var refreshToken = string.Empty;
-            var accessToken = string.Empty;
             var clientId = _settings.ClientId;
             var clientSecret = _settings.ClientSecret;
             var redirectUri = _settings.RedirectUri;
@@ -67,12 +65,17 @@ public sealed class MicrosoftAuthenticationService
             }
 
             var tokenResponse = JsonConvert.DeserializeObject<Dictionary<string, string>>(content);
-            var isRefreshTokenExists = tokenResponse is not null &&
-                                tokenResponse.TryGetValue("refresh_token", out refreshToken);
 
-            if (!isRefreshTokenExists || string.IsNullOrWhiteSpace(refreshToken))
+            if (tokenResponse is null)
             {
-                return Result.Failure("No tokens in response");
+                return Result.Failure<AccessToken>($"Failed to exchange refresh token for access token, error: {content}");
+            }
+
+            _ = tokenResponse.TryGetValue("refresh_token", out var refreshToken);
+
+            if (string.IsNullOrWhiteSpace(refreshToken))
+            {
+                return Result.Failure<AccessToken>("No tokens in response");
             }
 
             await _ssm.SetMicrosoftRefreshTokenAsync(refreshToken);
@@ -89,7 +92,6 @@ public sealed class MicrosoftAuthenticationService
     {
         try
         {
-            var refreshToken = string.Empty;
             var clientId = _settings.ClientId;
             var clientSecret = _settings.ClientSecret;
             var redirectUri = _settings.RedirectUri;
@@ -116,12 +118,17 @@ public sealed class MicrosoftAuthenticationService
             }
 
             var tokenResponse = JsonConvert.DeserializeObject<Dictionary<string, string>>(content);
-            var isRefreshTokenExists = tokenResponse is not null &&
-                                       tokenResponse.TryGetValue("refresh_token", out refreshToken);
 
-            if (!isRefreshTokenExists || string.IsNullOrWhiteSpace(refreshToken))
+            if (tokenResponse is null)
             {
-                return Result.Failure("No refresh token in response");
+                return Result.Failure<AccessToken>($"Failed to exchange refresh token for access token, error: {content}");
+            }
+
+            _ = tokenResponse.TryGetValue("refresh_token", out var refreshToken);
+
+            if (string.IsNullOrWhiteSpace(refreshToken))
+            {
+                return Result.Failure<AccessToken>("No tokens in response");
             }
 
             await _ssm.SetMicrosoftRefreshTokenAsync(refreshToken);
@@ -138,9 +145,15 @@ public sealed class MicrosoftAuthenticationService
     {
         try
         {
-            var refreshToken = string.Empty;
-            var accessToken = string.Empty;
-            var expiresIn = string.Empty;
+            if(!string.IsNullOrWhiteSpace(_settings.AccessTokenValue) &&
+               long.Parse(_settings.AccessTokenExpiresOn) > DateTimeOffset.UtcNow.ToUnixTimeSeconds() + 30)
+            {
+                return Result.Success(
+                    new AccessToken(
+                        _settings.AccessTokenValue,
+                        DateTimeOffset.FromUnixTimeSeconds(long.Parse(_settings.AccessTokenExpiresOn))));
+            }
+
             var clientId = _settings.ClientId;
             var clientSecret = _settings.ClientSecret;
             var redirectUri = _settings.RedirectUri;
@@ -167,26 +180,27 @@ public sealed class MicrosoftAuthenticationService
             }
 
             var tokenResponse = JsonConvert.DeserializeObject<Dictionary<string, string>>(content);
-            var isRefreshTokenExists = tokenResponse is not null &&
-                                       tokenResponse.TryGetValue("refresh_token", out refreshToken);
-            var isAccessTokenExists = tokenResponse is not null &&
-                                       tokenResponse.TryGetValue("access_token", out accessToken);
-            var isExpiresInExists = tokenResponse is not null &&
-                                       tokenResponse.TryGetValue("expires_in", out expiresIn);
 
-            if (!isRefreshTokenExists ||
-                !isAccessTokenExists ||
-                !isExpiresInExists ||
-                string.IsNullOrWhiteSpace(refreshToken) ||
+            if(tokenResponse is null)
+            {
+                return Result.Failure<AccessToken>($"Failed to exchange refresh token for access token, error: {content}");
+            }
+
+            _ = tokenResponse.TryGetValue("refresh_token", out var refreshToken);
+            _ = tokenResponse.TryGetValue("access_token", out var accessToken);
+            _ = tokenResponse.TryGetValue("expires_in", out var expiresIn);
+
+            if (string.IsNullOrWhiteSpace(refreshToken) ||
                 string.IsNullOrWhiteSpace(accessToken) ||
                 string.IsNullOrWhiteSpace(expiresIn))
             {
                 return Result.Failure<AccessToken>("No tokens in response");
             }
 
-            await _ssm.SetMicrosoftRefreshTokenAsync(refreshToken);
+            var expirationDate = DateTimeOffset.UtcNow.AddSeconds(long.Parse(expiresIn));
 
-            var expirationDate = DateTime.UtcNow.AddSeconds(int.Parse(expiresIn));
+            await _ssm.SetMicrosoftRefreshTokenAsync(refreshToken);
+            await _ssm.SetMicrosoftAccessTokenAsync(accessToken, expirationDate.ToUnixTimeSeconds());
 
             return Result.Success(new AccessToken(accessToken, expirationDate));
         }
