@@ -26,7 +26,7 @@ Resources:
     Properties:
       FunctionName: MicrosoftLogin
       Runtime: dotnet8
-      CodeUri: s3://photo.organizer/855665dcd4d9fe60cc198ca3a38af4d6
+      CodeUri: s3://photo.organizer/199857a1df11fb9f121133e4b20b941b
       MemorySize: 512
       Timeout: 30
       Role: arn:aws:iam::975049887576:role/Admin
@@ -50,7 +50,7 @@ Resources:
     Properties:
       FunctionName: MicrosoftCallback
       Runtime: dotnet8
-      CodeUri: s3://photo.organizer/855665dcd4d9fe60cc198ca3a38af4d6
+      CodeUri: s3://photo.organizer/199857a1df11fb9f121133e4b20b941b
       MemorySize: 512
       Timeout: 30
       Role: arn:aws:iam::975049887576:role/Admin
@@ -74,7 +74,7 @@ Resources:
     Properties:
       FunctionName: MicrosoftRefreshTokens
       Runtime: dotnet8
-      CodeUri: s3://photo.organizer/855665dcd4d9fe60cc198ca3a38af4d6
+      CodeUri: s3://photo.organizer/199857a1df11fb9f121133e4b20b941b
       MemorySize: 512
       Timeout: 30
       Role: arn:aws:iam::975049887576:role/Admin
@@ -98,7 +98,7 @@ Resources:
     Properties:
       FunctionName: UploadPhoto
       Runtime: dotnet8
-      CodeUri: s3://photo.organizer/855665dcd4d9fe60cc198ca3a38af4d6
+      CodeUri: s3://photo.organizer/199857a1df11fb9f121133e4b20b941b
       MemorySize: 512
       Timeout: 30
       Role: arn:aws:iam::975049887576:role/Admin
@@ -122,7 +122,7 @@ Resources:
     Properties:
       FunctionName: GetAlbum
       Runtime: dotnet8
-      CodeUri: s3://photo.organizer/855665dcd4d9fe60cc198ca3a38af4d6
+      CodeUri: s3://photo.organizer/199857a1df11fb9f121133e4b20b941b
       MemorySize: 512
       Timeout: 30
       Role: arn:aws:iam::975049887576:role/Admin
@@ -146,7 +146,7 @@ Resources:
     Properties:
       FunctionName: SetAlbum
       Runtime: dotnet8
-      CodeUri: s3://photo.organizer/855665dcd4d9fe60cc198ca3a38af4d6
+      CodeUri: s3://photo.organizer/199857a1df11fb9f121133e4b20b941b
       MemorySize: 512
       Timeout: 30
       Role: arn:aws:iam::975049887576:role/Admin
@@ -170,7 +170,7 @@ Resources:
     Properties:
       FunctionName: ResetAlbum
       Runtime: dotnet8
-      CodeUri: s3://photo.organizer/855665dcd4d9fe60cc198ca3a38af4d6
+      CodeUri: s3://photo.organizer/199857a1df11fb9f121133e4b20b941b
       MemorySize: 512
       Timeout: 30
       Role: arn:aws:iam::975049887576:role/Admin

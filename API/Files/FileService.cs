@@ -1,10 +1,12 @@
-﻿using API.Data.Repositories;
+﻿using Amazon.Lambda.Core;
+using API.Data.Repositories;
 using API.Domain;
 using API.Domain.Albums;
 using API.Domain.Responses;
 using API.Files.OneDrive;
 using API.Requests;
 using Microsoft.Identity.Client;
+using Newtonsoft.Json;
 
 namespace API.Files;
 

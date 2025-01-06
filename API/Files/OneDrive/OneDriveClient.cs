@@ -46,8 +46,6 @@ public sealed class OneDriveClient
 
             var response = await _client.PutAsync(requestUrl, new StreamContent(file));
 
-            LambdaLogger.Log($"Response: {JsonConvert.SerializeObject(response.RequestMessage)}");
-
             var responseContent = await response.Content.ReadAsStringAsync();
 
             if (!response.IsSuccessStatusCode)
