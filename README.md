@@ -43,7 +43,7 @@ Photo Organizer is a serverless API that integrates photos with OneDrive. Design
 
 4. **Client Setup:**
    - Configure your iOS Shortcuts (or other client-side tool) to communicate with the deployed API endpoints.
-   - Use Siri and shortcut automations to trigger these shortcuts for a seamless photo backup experience.
+   - Use Siri and shortcut automations to trigger these shortcuts for a seamless photo backup experience. (find .shortcut files in docs folder if you want to implement this approach)
 
 ## Configuration
 
