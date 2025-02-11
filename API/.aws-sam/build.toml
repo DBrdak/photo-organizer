@@ -27,7 +27,7 @@ functions = ["MicrosoftLogin", "MicrosoftCallback", "GetAlbum"]
 Tool = "Amazon.Lambda.Annotations"
 SyncedEvents = ["RootGet"]
 
-[function_build_definitions.dcf7339a-ef9e-4770-8df5-8bf05d441043]
+[function_build_definitions.b8baf930-534d-4ec6-9206-f9aa14c079c2]
 codeuri = "D:\\Programownie\\Projekty\\photo-organizer\\API"
 runtime = "dotnet8"
 architecture = "x86_64"
@@ -36,8 +36,7 @@ manifest_hash = ""
 packagetype = "Zip"
 functions = ["MicrosoftRefreshTokens"]
 
-[function_build_definitions.dcf7339a-ef9e-4770-8df5-8bf05d441043.metadata]
+[function_build_definitions.b8baf930-534d-4ec6-9206-f9aa14c079c2.metadata]
 Tool = "Amazon.Lambda.Annotations"
-SyncedEvents = ["RootPut"]
 
 [layer_build_definitions]

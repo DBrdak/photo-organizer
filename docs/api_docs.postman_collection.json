@@ -1,0 +1,153 @@
+{
+	"info": {
+		"_postman_id": "966e7171-51bf-430b-968e-5de6c01f0ddd",
+		"name": "API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "24891838"
+	},
+	"item": [
+		{
+			"name": "Login",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/microsoft/login",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"microsoft",
+						"login"
+					]
+				},
+				"description": "Used to log in via microsoft. Then the obtained token is automatically refreshed each day at 9:00 pm, as long as you use AWS with default template.yml."
+			},
+			"response": []
+		},
+		{
+			"name": "Upload Photo",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "file",
+					"file": {
+						"src": ""
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/photos/new?name&extension&user",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"photos",
+						"new"
+					],
+					"query": [
+						{
+							"key": "name",
+							"value": null
+						},
+						{
+							"key": "extension",
+							"value": null
+						},
+						{
+							"key": "user",
+							"value": null
+						}
+					]
+				},
+				"description": "Adds a Photo to currently chosen Album."
+			},
+			"response": []
+		},
+		{
+			"name": "Set Album",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "file",
+					"file": {
+						"src": ""
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/photos/new?name",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"photos",
+						"new"
+					],
+					"query": [
+						{
+							"key": "name",
+							"value": null
+						}
+					]
+				},
+				"description": "Sets the current Album."
+			},
+			"response": []
+		},
+		{
+			"name": "Reset Album",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "file",
+					"file": {
+						"src": ""
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/photos/new",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"photos",
+						"new"
+					]
+				},
+				"description": "Restes the current Album to default Album (Uncategorized)."
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

@@ -66,8 +66,6 @@ Resources:
     Type: AWS::Serverless::Function
     Metadata:
       SamResourceId: MicrosoftRefreshTokens
-      SyncedEvents:
-      - RootPut
       Tool: Amazon.Lambda.Annotations
     Properties:
       FunctionName: MicrosoftRefreshTokens
@@ -79,13 +77,11 @@ Resources:
       PackageType: Zip
       Handler: API::API.Functions_MicrosoftRefreshTokens_Generated::MicrosoftRefreshTokens
       Events:
-        RootPut:
-          Type: HttpApi
+        RemoveOldUrlsEvent:
+          Type: Schedule
           Properties:
-            Path: /microsoft/tokens/refresh
-            Method: PUT
-            ApiId:
-              Ref: PhotoOrganizerApi
+            Name: MicrosoftRefreshTokens
+            Schedule: cron(0 2 * * ? *)
   UploadPhoto:
     Type: AWS::Serverless::Function
     Metadata:
